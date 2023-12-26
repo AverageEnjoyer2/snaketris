@@ -122,8 +122,8 @@ def drawTetra(index=-1, pixelx=w-150, pixely=230, rotated=False, color="nocolor"
         tetramino = random.choice(tetraminos)  # Случайное тетрамино
     else:
         tetramino = tetraminos[index] # прописанное тетрамино
-    if color == "nocolor":
-        color = random.choice(colors)
+    if color == "nocolor":  #  проверка, прописан ли цвет
+        color = random.choice(colors)  #  случайный цвет
     number = 0
     if rotated:  # проверка наклона
         number += 1
