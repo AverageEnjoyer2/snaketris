@@ -148,7 +148,7 @@ if __name__ == '__main__':
     tetradrawn = False
     while running:
         for event in pg.event.get():
-            if event.type == pg.QUIT:
+            if event.type == pg.QUIT: # выход из игры
                 running = False
             elif event.type == pg.KEYUP:
                 if event.key == K_SPACE:
