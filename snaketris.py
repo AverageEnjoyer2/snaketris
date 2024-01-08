@@ -300,3 +300,4 @@ if __name__ == '__main__':
         pg.display.update()
     pg.quit()
     sys.exit()
+# Проект в процессе разработки!
