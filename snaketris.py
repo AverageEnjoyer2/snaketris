@@ -6,11 +6,13 @@ from random import choice
 
 fps = 25
 w, h = 600, 500
-blocksize = 20 #  размер одного блока
+blocksize = 20  # размер одного блока
 side = int((w - 20 * blocksize) / 2)
 square_h = 20
 sqare_w = 10
 top = h - (10 * blocksize) - 5
+
+
 #  все тетрамино
 class Board:  # класс клеточной сетки, применялся мною раньше для решения задач
     # создание поля
@@ -35,7 +37,7 @@ class Board:  # класс клеточной сетки, применялся �
         for i in range(self.height):
             for j in range(self.width):
                 pg.draw.rect(screen, "white", (self.cell_size * j + self.top, self.cell_size * i + self.left,
-                                                   self.cell_size, self.cell_size), 1)
+                                               self.cell_size, self.cell_size), 1)
                 self.cells.append([i, j, self.cell_size * j + self.top, self.cell_size * i + self.left])
                 if i == 0:
                     self.first_column.append([i, j, self.cell_size * j + self.top, self.cell_size * i + self.left])
@@ -55,6 +57,8 @@ class Board:  # класс клеточной сетки, применялся �
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
         self.on_click(cell)
+
+
 tetraminos = [[['00100',
                 '00100',
                 '01100',
@@ -153,24 +157,20 @@ tetraminos = [[['00100',
 colors = ("blue", "green", "red", "yellow")
 
 
-
-
-
-
-
-def drawBlock(color, pixelx=None, pixely=None): #  отрисовка блока
+def drawBlock(color, pixelx=None, pixely=None):  # отрисовка блока
     if color == "0":
         return
     pg.draw.rect(screen, color, (pixelx + 1, pixely + 1, blocksize - 1, blocksize - 1), 0, 3)
     return [pixelx + 1, pixely + 1]
 
-def drawTetra(index=-1, pixelx=w-150, pixely=230, rotated=False, color="nocolor"):  # отрисовка тетрамино
+
+def drawTetra(index=-1, pixelx=w - 150, pixely=230, rotated=False, color="nocolor"):  # отрисовка тетрамино
     if index < 0:
         tetramino = random.choice(tetraminos)  # Случайное тетрамино
     else:
-        tetramino = tetraminos[index] # прописанное тетрамино
-    if color == "nocolor":  #  проверка, прописан ли цвет
-        color = random.choice(colors)  #  случайный цвет
+        tetramino = tetraminos[index]  # прописанное тетрамино
+    if color == "nocolor":  # проверка, прописан ли цвет
+        color = random.choice(colors)  # случайный цвет
     number = 0
     if rotated:  # проверка наклона
         number += 1
@@ -184,8 +184,8 @@ def drawTetra(index=-1, pixelx=w-150, pixely=230, rotated=False, color="nocolor"
     return [tetraminos.index(tetramino), color, blcoks]
 
 
-
-
+v = 0
+moved_down = False
 
 if __name__ == '__main__':
     global fps_clock, screen, basic_font, big_font
@@ -198,7 +198,7 @@ if __name__ == '__main__':
     board.render(screen)
     while running:
         for event in pg.event.get():
-            if event.type == pg.QUIT: # выход из игры
+            if event.type == pg.QUIT:  # выход из игры
                 running = False
             elif event.type == pg.KEYUP:
                 if event.key == K_SPACE:
@@ -295,9 +295,67 @@ if __name__ == '__main__':
                             cell = newcell
                     except NameError:
                         pass
+                elif event.key == pg.K_k:
+                    failed = False
+                    try:
+                        screen.fill("black")
+                        board.render(screen)
+                        try:
+                            newcell = board.cells[board.cells.index(cell) + board.width]
+                            tetramino = drawTetra(index=tetra, color=tetracolor, pixelx=(newcell[2] - blocksize * 2),
+                                                  pixely=newcell[3])  # Перемещение тетрамино вниз
+                            tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
 
-
+                            for block in tblcoks:
+                                # Если при перемещении тетрамино уходит за пределы сетки, возвращаем старую
+                                if board.get_cell([block[0], block[1]]) == "None":
+                                    screen.fill("black")
+                                    board.render(screen)
+                                    tetramino = drawTetra(index=tetra, color=tetracolor,
+                                                          pixelx=(cell[2] - blocksize * 2),
+                                                          pixely=cell[3])
+                                    tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
+                                    failed = True
+                            if not failed:
+                                cell = newcell
+                        except IndexError:
+                            pass
+                    except NameError:
+                        pass
+        fps_clock.tick(30)
         pg.display.update()
+        v += fps_clock.tick()
+        if v == fps and not moved_down:
+            v = 0
+            moved_down = True
+            failed = False
+            try:  # перемещение тетрамино вниз каждую секунду
+                screen.fill("black")
+                board.render(screen)
+                try:
+                    newcell = board.cells[board.cells.index(cell) + board.width]
+                    tetramino = drawTetra(index=tetra, color=tetracolor, pixelx=(newcell[2] - blocksize * 2),
+                                          pixely=newcell[3])  # Перемещение тетрамино вниз
+                    tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
+
+                    for block in tblcoks:
+                        # Если при перемещении тетрамино уходит за пределы сетки, возвращаем старую
+                        if board.get_cell([block[0], block[1]]) == "None":
+                            screen.fill("black")
+                            board.render(screen)
+                            tetramino = drawTetra(index=tetra, color=tetracolor,
+                                                  pixelx=(cell[2] - blocksize * 2),
+                                                  pixely=cell[3])
+                            tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
+                            failed = True
+                    if not failed:
+                        cell = newcell
+                except IndexError:
+                    pass
+            except NameError:
+                pass
+        else:
+            moved_down = False
     pg.quit()
     sys.exit()
 # Проект в процессе разработки!
