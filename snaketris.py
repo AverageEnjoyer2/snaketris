@@ -33,6 +33,7 @@ class Board:  # класс клеточной сетки, применялся �
         self.font = pg.font.SysFont('arial', 20)
         self.display_score = pg.display.set_mode((w, h))
         self.fontcolor = "yellow"
+        self.snake = []
 
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -48,6 +49,7 @@ class Board:  # класс клеточной сетки, применялся �
         self.tetraminos = []
         self.score = 0
         self.scoretext = f"Очки:{self.score}"
+        self.snake = []
         for i in range(self.height):
             for j in range(self.width):
                 pg.draw.rect(screen, "white", (self.cell_size * j + self.top, self.cell_size * i + self.left,
@@ -56,6 +58,19 @@ class Board:  # класс клеточной сетки, применялся �
                 if i == 0:
                     self.first_column.append(
                         [i, j, self.cell_size * j + self.top, self.cell_size * i + self.left, "empty"])
+        # for cell in self.cells[(board.width * board.height) // 2]
+        for i in range(4):
+            snakecell = self.cells[(board.width * board.height) // 2 + (board.width // 2) - 2 + i]
+            snakecell[-1] = "dark green"
+            self.cells[(board.width * board.height) // 2 + (board.width // 2) - 2 + i] = snakecell
+            pg.draw.rect(screen, snakecell[-1],
+                         (self.cell_size * snakecell[1] + self.top, self.cell_size * snakecell[0] + self.left,
+                          self.cell_size, self.cell_size), 0)
+            if i == 0:
+                self.snake.append([snakecell, "left"])
+            else:
+                self.snake.append(snakecell)
+
 
     def rerender(self, screen):
         nextSurf = self.font.render(self.scoretext, True, self.fontcolor)
@@ -295,6 +310,7 @@ def drawTetra(index=-1, pixelx=w - 150, pixely=230, rotated=False, color="nocolo
 
 
 v = 0
+snake_v = 0
 moved_down = False
 
 if __name__ == '__main__':
@@ -312,6 +328,7 @@ if __name__ == '__main__':
                 running = False
             elif event.type == pg.KEYUP:
                 if event.key == K_SPACE:
+                    print("why not")
                     cell = choice(board.first_column)
                     while True:
                         rotate = choice([True, False])
@@ -319,7 +336,7 @@ if __name__ == '__main__':
                         wrongcells = 0
                         screen.fill("black")
                         board.rerender(screen)
-                        tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3])
+                        tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3], rotated=rotate)
                         tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                         # отрисовка нового тетамино в случайном месте в верхних колоннах сетки
                         for block in tblcoks:  # проверяем, не вылезают ли блоки за сетку
@@ -332,7 +349,7 @@ if __name__ == '__main__':
                             break
                         elif wrongcells == 0:
                             break
-                elif event.key == pg.K_a:
+                elif event.key == pg.K_r:
                     try:
                         screen.fill("black")
                         board.rerender(screen)
@@ -354,7 +371,7 @@ if __name__ == '__main__':
                     except NameError:
                         pass
 
-                elif event.key == pg.K_d:
+                elif event.key == pg.K_t:
                     try:
                         screen.fill("black")
                         board.rerender(screen)
@@ -458,9 +475,23 @@ if __name__ == '__main__':
                             pass
                     except NameError:
                         pass
+                elif event.key == pg.K_w:
+                    if board.snake[0][1] != "down":
+                        board.snake[0][1] = "up"
+                elif event.key == pg.K_a:
+                    if board.snake[0][1] != "right":
+                        board.snake[0][1] = "left"
+                elif event.key == pg.K_s:
+                    if board.snake[0][1] != "up":
+                        board.snake[0][1] = "down"
+                elif event.key == pg.K_d:
+                    if board.snake[0][1] != "left":
+                        board.snake[0][1] = "right"
         fps_clock.tick(30)
         pg.display.update()
-        v += fps_clock.tick()
+        tick = fps_clock.tick()
+        v += tick
+        snake_v += tick
         if v == fps and not moved_down and not tetradrawn:
             v = 0
             moved_down = True
@@ -516,6 +547,7 @@ if __name__ == '__main__':
                             screen.fill("black")
                             board.rerender(screen)
                             rotate = choice([True, False])
+                            print("why")
                             tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3], rotated=rotate)
                             tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                             # отрисовка нового тетамино в случайном месте в верхних колоннах сетки
@@ -543,6 +575,88 @@ if __name__ == '__main__':
                 pass
         else:
             moved_down = False
+        if snake_v == fps // 4:
+            snake_v = 0
+            if board.snake[0][1] == "left" and board.snake[0][0][1] != 0:
+                try:
+                    usedblocks = []
+                    for block in tblcoks:
+                        usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
+                    tempcell1 = board.snake[0][0]
+                    if board.cells[board.cells.index(tempcell1) - 1][-1] == "empty" and [tempcell1[0], tempcell1[1]] not in usedblocks:
+                        board.cells[board.cells.index(tempcell1)][-1] = "empty"
+                        board.cells[board.cells.index(tempcell1) - 1][-1] = "darkgreen"
+                        board.snake[0][0] = board.cells[board.cells.index(tempcell1) - 1]
+                        tempcell1[-1] = "empty"
+                        for snackecell in board.snake[1:]:
+                            inde = board.snake.index(snackecell)
+                            tempcell2 = snackecell
+                            board.cells[board.cells.index(tempcell2)][-1] = "empty"
+                            board.cells[board.cells.index(tempcell1)][-1] = "darkgreen"
+                            board.snake[inde] = tempcell1
+                            tempcell1 = tempcell2
+                            board.rerender(screen)
+                except Exception as e:
+                    print(e)
+            elif board.snake[0][1] == "up" and board.snake[0][0][0] != 0:
+                tempcell1 = board.snake[0][0]
+                usedblocks = []
+                for block in tblcoks:
+                    usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
+                if board.cells[board.cells.index(tempcell1) - board.width][-1] == "empty" and [tempcell1[0], tempcell1[1]] not in usedblocks:
+                    board.cells[board.cells.index(tempcell1)][-1] = "empty"
+                    board.cells[board.cells.index(tempcell1) - board.width][-1] = "darkgreen"
+                    board.snake[0][0] = board.cells[board.cells.index(tempcell1) - board.width]
+                    tempcell1[-1] = "empty"
+                    for snackecell in board.snake[1:]:
+                        inde = board.snake.index(snackecell)
+                        tempcell2 = snackecell
+                        board.cells[board.cells.index(tempcell2)][-1] = "empty"
+                        board.cells[board.cells.index(tempcell1)][-1] = "darkgreen"
+                        board.snake[inde] = tempcell1
+                        tempcell1 = tempcell2
+            elif board.snake[0][1] == "down" and board.snake[0][0][0] != board.height - 1:
+                tempcell1 = board.snake[0][0]
+                usedblocks = []
+                for block in tblcoks:
+                    usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
+                if board.cells[board.cells.index(tempcell1) + board.width][-1] == "empty" and [tempcell1[0], tempcell1[
+                    1]] not in usedblocks:
+                    board.cells[board.cells.index(tempcell1)][-1] = "empty"
+                    board.cells[board.cells.index(tempcell1) + board.width][-1] = "darkgreen"
+                    board.snake[0][0] = board.cells[board.cells.index(tempcell1) + board.width]
+                    tempcell1[-1] = "empty"
+                    for snackecell in board.snake[1:]:
+                        inde = board.snake.index(snackecell)
+                        tempcell2 = snackecell
+                        board.cells[board.cells.index(tempcell2)][-1] = "empty"
+                        board.cells[board.cells.index(tempcell1)][-1] = "darkgreen"
+                        board.snake[inde] = tempcell1
+                        tempcell1 = tempcell2
+            elif board.snake[0][1] == "right" and board.snake[0][0][1] != board.width - 1:
+                try:
+                    usedblocks = []
+                    for block in tblcoks:
+                        usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
+                    tempcell1 = board.snake[0][0]
+                    if board.cells[board.cells.index(tempcell1) + 1][-1] == "empty" and [tempcell1[0], tempcell1[1]] not in usedblocks:
+                        board.cells[board.cells.index(tempcell1)][-1] = "empty"
+                        board.cells[board.cells.index(tempcell1) + 1][-1] = "darkgreen"
+                        board.snake[0][0] = board.cells[board.cells.index(tempcell1) + 1]
+                        tempcell1[-1] = "empty"
+                        for snackecell in board.snake[1:]:
+                            inde = board.snake.index(snackecell)
+                            tempcell2 = snackecell
+                            board.cells[board.cells.index(tempcell2)][-1] = "empty"
+                            board.cells[board.cells.index(tempcell1)][-1] = "darkgreen"
+                            board.snake[inde] = tempcell1
+                            tempcell1 = tempcell2
+                            board.rerender(screen)
+                except Exception as e:
+                    print(e)
+
+
+            board.rerender(screen)
     pg.quit()
     sys.exit()
 # Проект в процессе разработки!
