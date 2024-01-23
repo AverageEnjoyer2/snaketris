@@ -121,7 +121,7 @@ class Board:  # класс клеточной сетки, применялся �
                                 else:
                                     del placedtetramino[placedtetramino.index(placedblock)]
                 self.rerender(screen)
-            if cell[-1] == "empty": # Если клетка пустая, то ряд не заполнен
+            if cell[-1] == "empty" or cell[-1] == "darkgreen": # Если клетка пустая, то ряд не заполнен
                 emptycells += 1
             if cellnum == (self.width - 1):  # С каждым рядо обновляем число незаролненных клеток
                 cellnum = 0
@@ -142,9 +142,6 @@ class Board:  # класс клеточной сетки, применялся �
                     else:
                         row = placedblock[0]
                 if tetramino1:
-                    print(placedtetramino)
-                    print(tetramino1)
-                    print(tetramino2)
                     del self.tetraminos[self.tetraminos.index(placedtetramino)]
                     self.tetraminos.append(tetramino1)
                     self.tetraminos.append(tetramino2)
@@ -328,7 +325,6 @@ if __name__ == '__main__':
                 running = False
             elif event.type == pg.KEYUP:
                 if event.key == K_SPACE:
-                    print("why not")
                     cell = choice(board.first_column)
                     while True:
                         rotate = choice([True, False])
@@ -547,7 +543,6 @@ if __name__ == '__main__':
                             screen.fill("black")
                             board.rerender(screen)
                             rotate = choice([True, False])
-                            print("why")
                             tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3], rotated=rotate)
                             tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                             # отрисовка нового тетамино в случайном месте в верхних колоннах сетки
@@ -575,7 +570,7 @@ if __name__ == '__main__':
                 pass
         else:
             moved_down = False
-        if snake_v == fps // 4:
+        if snake_v == fps // 6:
             snake_v = 0
             if board.snake[0][1] == "left" and board.snake[0][0][1] != 0:
                 try:
@@ -583,7 +578,8 @@ if __name__ == '__main__':
                     for block in tblcoks:
                         usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
                     tempcell1 = board.snake[0][0]
-                    if board.cells[board.cells.index(tempcell1) - 1][-1] == "empty" and [tempcell1[0], tempcell1[1]] not in usedblocks:
+                    tempcell2 = board.cells[board.cells.index(tempcell1) - 1]
+                    if board.cells[board.cells.index(tempcell1) - 1][-1] == "empty" and [tempcell1[0], tempcell1[1]] not in usedblocks and [tempcell2[0], tempcell2[1]] not in usedblocks:
                         board.cells[board.cells.index(tempcell1)][-1] = "empty"
                         board.cells[board.cells.index(tempcell1) - 1][-1] = "darkgreen"
                         board.snake[0][0] = board.cells[board.cells.index(tempcell1) - 1]
@@ -601,9 +597,10 @@ if __name__ == '__main__':
             elif board.snake[0][1] == "up" and board.snake[0][0][0] != 0:
                 tempcell1 = board.snake[0][0]
                 usedblocks = []
+                tempcell2 = board.cells[board.cells.index(tempcell1) - board.width]
                 for block in tblcoks:
                     usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
-                if board.cells[board.cells.index(tempcell1) - board.width][-1] == "empty" and [tempcell1[0], tempcell1[1]] not in usedblocks:
+                if board.cells[board.cells.index(tempcell1) - board.width][-1] == "empty" and [tempcell1[0], tempcell1[1]] not in usedblocks and [tempcell2[0], tempcell2[1]] not in usedblocks:
                     board.cells[board.cells.index(tempcell1)][-1] = "empty"
                     board.cells[board.cells.index(tempcell1) - board.width][-1] = "darkgreen"
                     board.snake[0][0] = board.cells[board.cells.index(tempcell1) - board.width]
@@ -617,11 +614,12 @@ if __name__ == '__main__':
                         tempcell1 = tempcell2
             elif board.snake[0][1] == "down" and board.snake[0][0][0] != board.height - 1:
                 tempcell1 = board.snake[0][0]
+                tempcell2 = board.cells[board.cells.index(tempcell1) + board.width]
                 usedblocks = []
                 for block in tblcoks:
                     usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
                 if board.cells[board.cells.index(tempcell1) + board.width][-1] == "empty" and [tempcell1[0], tempcell1[
-                    1]] not in usedblocks:
+                    1]] not in usedblocks and [tempcell2[0], tempcell2[1]] not in usedblocks:
                     board.cells[board.cells.index(tempcell1)][-1] = "empty"
                     board.cells[board.cells.index(tempcell1) + board.width][-1] = "darkgreen"
                     board.snake[0][0] = board.cells[board.cells.index(tempcell1) + board.width]
@@ -639,7 +637,8 @@ if __name__ == '__main__':
                     for block in tblcoks:
                         usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
                     tempcell1 = board.snake[0][0]
-                    if board.cells[board.cells.index(tempcell1) + 1][-1] == "empty" and [tempcell1[0], tempcell1[1]] not in usedblocks:
+                    tempcell2 = board.cells[board.cells.index(tempcell1) + 1]
+                    if board.cells[board.cells.index(tempcell1) + 1][-1] == "empty" and [tempcell1[0], tempcell1[1]] not in usedblocks and [tempcell2[0], tempcell2[1]] not in usedblocks:
                         board.cells[board.cells.index(tempcell1)][-1] = "empty"
                         board.cells[board.cells.index(tempcell1) + 1][-1] = "darkgreen"
                         board.snake[0][0] = board.cells[board.cells.index(tempcell1) + 1]
@@ -655,8 +654,7 @@ if __name__ == '__main__':
                 except Exception as e:
                     print(e)
 
-
-            board.rerender(screen)
+        board.rerender(screen)
     pg.quit()
     sys.exit()
 # Проект в процессе разработки!
