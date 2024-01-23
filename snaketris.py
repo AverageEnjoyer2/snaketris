@@ -314,6 +314,7 @@ if __name__ == '__main__':
                 if event.key == K_SPACE:
                     cell = choice(board.first_column)
                     while True:
+                        rotate = choice([True, False])
                         lost = False
                         wrongcells = 0
                         screen.fill("black")
@@ -338,15 +339,17 @@ if __name__ == '__main__':
                         tetramino = drawTetra(index=tetra, rotated=True, color=tetracolor,
                                               pixelx=(cell[2] - blocksize * 2),
                                               pixely=cell[3])  # Поворот тетрамино в одну сторону
+                        rotate = True
                         tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                         for block in tblcoks:  # Если при повороте тетрамино уходит за пределы сетки, возвращаем старую
                             if (board.get_cell([block[0], block[1]]) == "None"
                                     or board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty"):
                                 screen.fill("black")
                                 board.rerender(screen)
+                                rotate = False
                                 tetramino = drawTetra(index=tetra, color=tetracolor,
                                                       pixelx=(cell[2] - blocksize * 2),
-                                                      pixely=cell[3])
+                                                      pixely=cell[3], rotated=False)
                                 tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                     except NameError:
                         pass
@@ -355,9 +358,21 @@ if __name__ == '__main__':
                     try:
                         screen.fill("black")
                         board.rerender(screen)
-                        tetramino = drawTetra(index=tetra, color=tetracolor, pixelx=(cell[2] - blocksize * 2),
-                                              pixely=cell[3])  # Поворот тетрамино в другую сторону
+                        tetramino = drawTetra(index=tetra, rotated=False, color=tetracolor,
+                                              pixelx=(cell[2] - blocksize * 2),
+                                              pixely=cell[3])  # Поворот тетрамино в одну сторону
+                        rotate = False
                         tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
+                        for block in tblcoks:  # Если при повороте тетрамино уходит за пределы сетки, возвращаем старую
+                            if (board.get_cell([block[0], block[1]]) == "None"
+                                    or board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty"):
+                                screen.fill("black")
+                                board.rerender(screen)
+                                tetramino = drawTetra(index=tetra, color=tetracolor,
+                                                      pixelx=(cell[2] - blocksize * 2),
+                                                      pixely=cell[3], rotated=True)
+                                rotated = True
+                                tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                     except NameError:
                         pass
                 elif event.key == pg.K_j:
@@ -367,7 +382,7 @@ if __name__ == '__main__':
                         board.rerender(screen)
                         newcell = board.cells[board.cells.index(cell) - 1]
                         tetramino = drawTetra(index=tetra, color=tetracolor, pixelx=(newcell[2] - blocksize * 2),
-                                              pixely=cell[3])  # Перемещение тетрамино влево
+                                              pixely=cell[3], rotated=rotate)  # Перемещение тетрамино влево
                         tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
 
                         for block in tblcoks:
@@ -380,7 +395,7 @@ if __name__ == '__main__':
                                 board.rerender(screen)
                                 tetramino = drawTetra(index=tetra, color=tetracolor,
                                                       pixelx=(cell[2] - blocksize * 2),
-                                                      pixely=cell[3])
+                                                      pixely=cell[3], rotated=rotate)
                                 tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                                 failed = True
                         if not failed:
@@ -394,7 +409,7 @@ if __name__ == '__main__':
                         board.rerender(screen)
                         newcell = board.cells[board.cells.index(cell) + 1]
                         tetramino = drawTetra(index=tetra, color=tetracolor, pixelx=(newcell[2] - blocksize * 2),
-                                              pixely=cell[3])  # Перемещение тетрамино вправо
+                                              pixely=cell[3], rotated=rotate)  # Перемещение тетрамино вправо
                         tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
 
                         for block in tblcoks:
@@ -407,7 +422,7 @@ if __name__ == '__main__':
                                 board.rerender(screen)
                                 tetramino = drawTetra(index=tetra, color=tetracolor,
                                                       pixelx=(cell[2] - blocksize * 2),
-                                                      pixely=cell[3])
+                                                      pixely=cell[3], rotated=rotate)
                                 tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                                 failed = True
                         if not failed:
@@ -422,7 +437,7 @@ if __name__ == '__main__':
                         try:
                             newcell = board.cells[board.cells.index(cell) + board.width]
                             tetramino = drawTetra(index=tetra, color=tetracolor, pixelx=(newcell[2] - blocksize * 2),
-                                                  pixely=newcell[3])  # Перемещение тетрамино вниз
+                                                  pixely=newcell[3], rotated=rotate)  # Перемещение тетрамино вниз
                             tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
 
                             for block in tblcoks:
@@ -433,7 +448,7 @@ if __name__ == '__main__':
                                     board.rerender(screen)
                                     tetramino = drawTetra(index=tetra, color=tetracolor,
                                                           pixelx=(cell[2] - blocksize * 2),
-                                                          pixely=cell[3])
+                                                          pixely=cell[3], rotated=rotate)
                                     tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                                     failed = True
                             if not failed:
@@ -457,7 +472,7 @@ if __name__ == '__main__':
                     colorproblem = False
                     newcell = board.cells[board.cells.index(cell) + board.width]
                     tetramino = drawTetra(index=tetra, color=tetracolor, pixelx=(newcell[2] - blocksize * 2),
-                                          pixely=newcell[3])  # Перемещение тетрамино вниз
+                                          pixely=newcell[3], rotated=rotate)  # Перемещение тетрамино вниз
                     tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                     blocks = []
 
@@ -469,14 +484,14 @@ if __name__ == '__main__':
                             board.rerender(screen)
                             tetramino = drawTetra(index=tetra, color=tetracolor,
                                                   pixelx=(cell[2] - blocksize * 2),
-                                                  pixely=cell[3])
+                                                  pixely=cell[3], rotated=rotate)
                             tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                         elif board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty":
                             screen.fill("black")
                             board.rerender(screen)
                             tetramino = drawTetra(index=tetra, color=tetracolor,
                                                   pixelx=(cell[2] - blocksize * 2),
-                                                  pixely=cell[3])
+                                                  pixely=cell[3], rotated=rotate)
                             tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                             colorproblem = True
 
@@ -500,7 +515,8 @@ if __name__ == '__main__':
                             wrongcells = 0
                             screen.fill("black")
                             board.rerender(screen)
-                            tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3])
+                            rotate = choice([True, False])
+                            tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3], rotated=rotate)
                             tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                             # отрисовка нового тетамино в случайном месте в верхних колоннах сетки
                             for block in tblcoks:  # проверяем, не вылезают ли блоки за сетку
