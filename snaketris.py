@@ -742,6 +742,17 @@ if __name__ == '__main__':
                                 board.cells[board.cells.index(tempcell1)][-1] = "darkgreen"
                                 board.snake[inde] = tempcell1
                                 tempcell1 = tempcell2
+                        elif board.cells[board.cells.index(tempcell1) - board.width][-1] == "purple":
+                            if board.cells[board.cells.index(tempcell1) - board.width][0] != 0:
+                                if board.cells[board.cells.index(tempcell1) - board.width * 2][-1] == "empty" and [
+                                    board.cells[board.cells.index(tempcell1) - 2 * board.width][0],
+                                    board.cells[board.cells.index(tempcell1) - board.width * 2][1]] not in usedblocks:
+                                    board.cells[board.cells.index(tempcell1) - board.width][-1] = "empty"
+                                    board.cells[board.cells.index(tempcell1) - 2 * board.width][-1] = "purple"
+                                else:
+                                    snake_lose()
+                            else:
+                                snake_lose()
                         screen.fill("black")
                         board.rerender(screen)
                     elif board.snake[0][1] == "down" and board.snake[0][0][0] != board.height - 1:
@@ -788,6 +799,17 @@ if __name__ == '__main__':
                                     pass
                             except NameError:
                                 pass
+                        elif board.cells[board.cells.index(tempcell1) + board.width][-1] == "purple":
+                            if board.cells[board.cells.index(tempcell1) + board.width][0] != board.height - 1:
+                                if board.cells[board.cells.index(tempcell1) + board.width * 2][-1] == "empty" and [
+                                    board.cells[board.cells.index(tempcell1) + 2 * board.width][0],
+                                    board.cells[board.cells.index(tempcell1) + board.width * 2][1]] not in usedblocks:
+                                    board.cells[board.cells.index(tempcell1) + board.width][-1] = "empty"
+                                    board.cells[board.cells.index(tempcell1) + 2 * board.width][-1] = "purple"
+                                else:
+                                    snake_lose()
+                            else:
+                                snake_lose()
                         screen.fill("black")
                         board.rerender(screen)
                     elif board.snake[0][1] == "right" and board.snake[0][0][1] != board.width - 1:
