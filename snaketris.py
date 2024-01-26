@@ -604,6 +604,7 @@ if __name__ == '__main__':
                                                 tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                                     except NameError:
                                         pass
+                                board.spawnspinblock()
                             elif board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty":
                                 screen.fill("black")
                                 board.rerender(screen)
