@@ -4,6 +4,7 @@ import random
 import sys
 from pygame.locals import *
 from random import choice
+import os
 
 fps = 25
 w, h = 600, 500
@@ -14,7 +15,15 @@ sqare_w = 10
 top = h - (10 * blocksize) - 5
 
 
-#  все тетрамино
+def load_image(name): # Функция загрузки изображения
+    fullname = os.path.join('data', name)
+    # если файл не существует, то выходим
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pg.image.load(fullname)
+    return image
+
 class Board:  # класс клеточной сетки, применялся мною раньше для решения задач
     # создание поля
     def __init__(self, width, height):
@@ -30,9 +39,9 @@ class Board:  # класс клеточной сетки, применялся �
         self.tetraminos = []  # список для упадших тетрамино
         self.score = 0
         self.scoretext = f"Очки:{self.score}"
-        self.font = pg.font.SysFont('arial', 20)
+        self.font = pg.font.SysFont('comic', 50)
         self.display_score = pg.display.set_mode((w, h))
-        self.fontcolor = "yellow"
+        self.fontcolor = "red"
         self.snake = []
 
     def set_view(self, left, top, cell_size):
@@ -78,7 +87,12 @@ class Board:  # класс клеточной сетки, применялся �
 
 
     def rerender(self, screen):
+        screen.fill("black")
         try:
+            fon = pg.transform.scale(load_image('background.png'), (w, h))
+            screen.blit(fon, (0, 0))
+            pg.draw.rect(screen, "darkblue", (self.top, self.left * board.width // 10,
+                                          self.cell_size * self.width, self.cell_size * self.height), 1)
             nextSurf = self.font.render(self.scoretext, True, self.fontcolor)
             nextRect = nextSurf.get_rect()
             nextRect.topleft = (w - 150, 180)
@@ -89,8 +103,7 @@ class Board:  # класс клеточной сетки, применялся �
             for i in range(self.height):
                 for j in range(self.width):
                     if board.cells[i * board.width + j][-1] == "empty" and [board.cells[i * board.width + j][0], board.cells[i * board.width + j][1]] not in usedblocks:
-                        pg.draw.rect(screen, "white", (self.cell_size * j + self.top, self.cell_size * i + self.left,
-                                                       self.cell_size, self.cell_size), 1)
+                        pass
                     elif [board.cells[i * board.width + j][0], board.cells[i * board.width + j][1]] in usedblocks:
                         pg.draw.rect(screen, tetracolor,
                                      (self.cell_size * j + self.top, self.cell_size * i + self.left,
@@ -340,7 +353,6 @@ def snake_lose():
         rotate = choice([True, False])
         lost = False
         wrongcells = 0
-        screen.fill("black")
         board.rerender(screen)
         tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3],
                               rotated=rotate)
@@ -369,9 +381,38 @@ paused = False
 if __name__ == '__main__':
     global fps_clock, screen, basic_font, big_font
     pg.init()
+    startingscreen = True
     fps_clock = pg.time.Clock()
     screen = pg.display.set_mode((w, h))
+    fon = pg.transform.scale(load_image('startbackground.png'), (w, h))
+    screen.blit(fon, (0, 0))
     running = True
+    instruction = False
+    while startingscreen:
+        pg.display.update()
+        for event in pg.event.get():
+            if event.type == pg.QUIT:  # выход из игры
+                startingscreen = False
+                running = False
+            elif event.type == pg.KEYUP:
+                if event.key == K_e and not instruction:
+                    v_time = fps * 2
+                    startingscreen = False
+                elif event.key == K_n and not instruction:
+                    v_time = fps
+                    startingscreen = False
+                elif event.key == K_h and not instruction:
+                    v_time = fps // 2
+                    startingscreen = False
+                elif event.key == K_q:
+                    if not instruction:
+                        fon = pg.transform.scale(load_image('instructions_background.png'), (w, h))
+                        screen.blit(fon, (0, 0))
+                        instruction = True
+                    else:
+                        fon = pg.transform.scale(load_image('startbackground.png'), (w, h))
+                        screen.blit(fon, (0, 0))
+                        instruction = False
     tetradrawn = False
     board = Board(sqare_w, square_h)
     board.render(screen)
@@ -392,7 +433,6 @@ if __name__ == '__main__':
                             rotate = choice([True, False])
                             lost = False
                             wrongcells = 0
-                            screen.fill("black")
                             board.rerender(screen)
                             tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3], rotated=rotate)
                             tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
@@ -409,7 +449,6 @@ if __name__ == '__main__':
                                 break
                     elif event.key == pg.K_r:
                         try:
-                            screen.fill("black")
                             board.rerender(screen)
                             tetramino = drawTetra(index=tetra, rotated=True, color=tetracolor,
                                                   pixelx=(cell[2] - blocksize * 2),
@@ -419,7 +458,6 @@ if __name__ == '__main__':
                             for block in tblcoks:  # Если при повороте тетрамино уходит за пределы сетки, возвращаем старую
                                 if (board.get_cell([block[0], block[1]]) == "None"
                                         or board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty"):
-                                    screen.fill("black")
                                     board.rerender(screen)
                                     rotate = False
                                     tetramino = drawTetra(index=tetra, color=tetracolor,
@@ -431,7 +469,6 @@ if __name__ == '__main__':
 
                     elif event.key == pg.K_t:
                         try:
-                            screen.fill("black")
                             board.rerender(screen)
                             tetramino = drawTetra(index=tetra, rotated=False, color=tetracolor,
                                                   pixelx=(cell[2] - blocksize * 2),
@@ -441,7 +478,6 @@ if __name__ == '__main__':
                             for block in tblcoks:  # Если при повороте тетрамино уходит за пределы сетки, возвращаем старую
                                 if (board.get_cell([block[0], block[1]]) == "None"
                                         or board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty"):
-                                    screen.fill("black")
                                     board.rerender(screen)
                                     tetramino = drawTetra(index=tetra, color=tetracolor,
                                                           pixelx=(cell[2] - blocksize * 2),
@@ -453,7 +489,6 @@ if __name__ == '__main__':
                     elif event.key == pg.K_j:
                         failed = False
                         try:
-                            screen.fill("black")
                             board.rerender(screen)
                             newcell = board.cells[board.cells.index(cell) - 1]
                             tetramino = drawTetra(index=tetra, color=tetracolor, pixelx=(newcell[2] - blocksize * 2),
@@ -466,7 +501,6 @@ if __name__ == '__main__':
                                         tetra == 8 and board.get_cell([block[0], block[1]])[1] == 9)
                                         or board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty"):
                                     # Отдельный случай с прямой вертикальной формой, показавшей странное поведение
-                                    screen.fill("black")
                                     board.rerender(screen)
                                     tetramino = drawTetra(index=tetra, color=tetracolor,
                                                           pixelx=(cell[2] - blocksize * 2),
@@ -480,7 +514,6 @@ if __name__ == '__main__':
                     elif event.key == pg.K_l:
                         failed = False
                         try:
-                            screen.fill("black")
                             board.rerender(screen)
                             newcell = board.cells[board.cells.index(cell) + 1]
                             tetramino = drawTetra(index=tetra, color=tetracolor, pixelx=(newcell[2] - blocksize * 2),
@@ -493,7 +526,6 @@ if __name__ == '__main__':
                                         tetra == 8 and board.get_cell([block[0], block[1]])[1] == 0)
                                         or board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty"):
                                     # Отдельный случай с прямой вертикальной формой, показавшей странное поведение
-                                    screen.fill("black")
                                     board.rerender(screen)
                                     tetramino = drawTetra(index=tetra, color=tetracolor,
                                                           pixelx=(cell[2] - blocksize * 2),
@@ -507,7 +539,6 @@ if __name__ == '__main__':
                     elif event.key == pg.K_k:
                         failed = False
                         try:
-                            screen.fill("black")
                             board.rerender(screen)
                             try:
                                 newcell = board.cells[board.cells.index(cell) + board.width]
@@ -519,7 +550,6 @@ if __name__ == '__main__':
                                     # Если при перемещении тетрамино уходит за пределы сетки, возвращаем старую
                                     if (board.get_cell([block[0], block[1]]) == "None"
                                             or board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty"):
-                                        screen.fill("black")
                                         board.rerender(screen)
                                         tetramino = drawTetra(index=tetra, color=tetracolor,
                                                               pixelx=(cell[2] - blocksize * 2),
@@ -553,12 +583,11 @@ if __name__ == '__main__':
             if cooldown:
                 cooldown_v += 1
             snake_v += tick
-            if (v == fps or v > fps) and not moved_down and not tetradrawn:
+            if v >= v_time and not moved_down and not tetradrawn:
                 v = 0
                 moved_down = True
                 failed = False
                 try:  # перемещение тетрамино вниз каждую секунду
-                    screen.fill("black")
                     board.rerender(screen)
                     try:
                         colorproblem = False
@@ -572,7 +601,6 @@ if __name__ == '__main__':
                             # Если при перемещении тетрамино уходит за пределы сетки, возвращаем старую
                             blocks.append(block[1])
                             if board.get_cell([block[0], block[1]]) == "None" or board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] == "darkgreen":
-                                screen.fill("black")
                                 board.rerender(screen)
                                 tetramino = drawTetra(index=tetra, color=tetracolor,
                                                       pixelx=(cell[2] - blocksize * 2),
@@ -580,11 +608,9 @@ if __name__ == '__main__':
                                 tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                             elif board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] == "purple":
                                 board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] = "empty"
-                                screen.fill("black")
                                 board.rerender(screen)
                                 if not rotate:
                                     try:
-                                        screen.fill("black")
                                         board.rerender(screen)
                                         tetramino = drawTetra(index=tetra, rotated=True, color=tetracolor,
                                                               pixelx=(cell[2] - blocksize * 2),
@@ -595,7 +621,6 @@ if __name__ == '__main__':
                                             if (board.get_cell([block[0], block[1]]) == "None"
                                                     or board.cells[int(board.get_cell([block[0], block[1]])[2])][
                                                         -1] != "empty"):
-                                                screen.fill("black")
                                                 board.rerender(screen)
                                                 rotate = False
                                                 tetramino = drawTetra(index=tetra, color=tetracolor,
@@ -606,7 +631,6 @@ if __name__ == '__main__':
                                         pass
                                 board.spawnspinblock()
                             elif board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty":
-                                screen.fill("black")
                                 board.rerender(screen)
                                 tetramino = drawTetra(index=tetra, color=tetracolor,
                                                       pixelx=(cell[2] - blocksize * 2),
@@ -632,7 +656,6 @@ if __name__ == '__main__':
                                 lost = False
                                 cell = choice(board.first_column)
                                 wrongcells = 0
-                                screen.fill("black")
                                 board.rerender(screen)
                                 rotate = choice([True, False])
                                 tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3], rotated=rotate)
@@ -702,7 +725,6 @@ if __name__ == '__main__':
                                                 or board.cells[int(board.get_cell([block[0], block[1]])[2])][
                                                     -1] != "empty"):
                                             snake_lose()
-                                    screen.fill("black")
                                     board.rerender(screen)
                                     if not failed:
                                         cell = newcell
@@ -711,8 +733,6 @@ if __name__ == '__main__':
                             elif board.cells[board.cells.index(tempcell1) - 1][-1] == "purple":
                                 if board.cells[board.cells.index(tempcell1) - 1][1] != 0:
                                     if board.cells[board.cells.index(tempcell1) - 2][-1] == "empty" and [board.cells[board.cells.index(tempcell1) - 2][0], board.cells[board.cells.index(tempcell1) - 2][1]] not in usedblocks:
-                                        print(board.cells[board.cells.index(tempcell1) - 2])
-                                        print(usedblocks)
                                         board.cells[board.cells.index(tempcell1) - 1][-1] = "empty"
                                         board.cells[board.cells.index(tempcell1) - 2][-1] = "purple"
                                     else:
@@ -722,7 +742,6 @@ if __name__ == '__main__':
 
                         except Exception as e:
                             print(e)
-                        screen.fill("black")
                         board.rerender(screen)
                     elif board.snake[0][1] == "up" and board.snake[0][0][0] != 0:
                         tempcell1 = board.snake[0][0]
@@ -753,7 +772,6 @@ if __name__ == '__main__':
                                     snake_lose()
                             else:
                                 snake_lose()
-                        screen.fill("black")
                         board.rerender(screen)
                     elif board.snake[0][1] == "down" and board.snake[0][0][0] != board.height - 1:
                         tempcell1 = board.snake[0][0]
@@ -777,7 +795,6 @@ if __name__ == '__main__':
                         elif [tempcell1[0], tempcell1[1]] in usedblocks or [tempcell2[0], tempcell2[1]] in usedblocks:
                             failed = False
                             try:
-                                screen.fill("black")
                                 board.rerender(screen)
                                 try:
                                     newcell = board.cells[board.cells.index(cell) + board.width]
@@ -810,7 +827,6 @@ if __name__ == '__main__':
                                     snake_lose()
                             else:
                                 snake_lose()
-                        screen.fill("black")
                         board.rerender(screen)
                     elif board.snake[0][1] == "right" and board.snake[0][0][1] != board.width - 1:
                         try:
@@ -831,13 +847,11 @@ if __name__ == '__main__':
                                     board.cells[board.cells.index(tempcell1)][-1] = "darkgreen"
                                     board.snake[inde] = tempcell1
                                     tempcell1 = tempcell2
-                                    screen.fill("black")
                                     board.rerender(screen)
                             elif [tempcell1[0], tempcell1[1]] in usedblocks or [tempcell2[0], tempcell2[1]] in usedblocks:
                                 cooldown = True
                                 failed = False
                                 try:
-                                    screen.fill("black")
                                     board.rerender(screen)
                                     newcell = board.cells[board.cells.index(cell) + 1]
                                     tetramino = drawTetra(index=tetra, color=tetracolor,
@@ -867,7 +881,6 @@ if __name__ == '__main__':
                                     snake_lose()
                         except Exception as e:
                             print(e)
-                        screen.fill("black")
                         board.rerender(screen)
                     else:
                         board.render(screen)
