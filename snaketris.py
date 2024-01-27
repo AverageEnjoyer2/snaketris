@@ -347,7 +347,22 @@ def drawTetra(index=-1, pixelx=w - 150, pixely=230, rotated=False, color="nocolo
 
 
 def snake_lose():
-    global board, screen, cell, failed, rotate, lost, wrongcells, tetramino, blocksize, tetra, tetracolor, tblcoks
+    global board, screen, cell, failed, rotate, lost, wrongcells, tetramino, blocksize, tetra, tetracolor, tblcoks, \
+        running
+    fon = pg.transform.scale(load_image('gameoverbackground.png'), (w, h))
+    screen.blit(fon, (0, 0))
+    letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U",
+               "V", "W", "X", "Y", "Z"]
+    gamveoverscreen = True
+    while gamveoverscreen:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:  # выход из игры
+                gamveoverscreen = False
+                running = False
+            elif event.type == pg.KEYUP:
+                if event.key == K_RETURN:
+                    gamveoverscreen = False
+        pg.display.update()
     board.render(screen)
     cell = choice(board.first_column)
     failed = True
@@ -420,6 +435,24 @@ if __name__ == '__main__':
     board.render(screen)
     animationframe = "frame1.png"
     anim_v = 0
+    board.render(screen)
+    cell = choice(board.first_column)
+    failed = True
+    while True:
+        rotate = choice([True, False])
+
+        wrongcells = 0
+        screen.fill("black")
+        board.rerender(screen)
+        tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3],
+                              rotated=rotate)
+        tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
+        # отрисовка нового тетамино в случайном месте в верхних колоннах сетки
+        for block in tblcoks:  # проверяем, не вылезают ли блоки за сетку
+            if board.get_cell([block[0], block[1]]) == "None":
+                wrongcells += 1
+        if wrongcells == 0:
+            break
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:  # выход из игры
@@ -447,7 +480,7 @@ if __name__ == '__main__':
                                 elif board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty":
                                     lost = True
                             if lost:  # Смотрим, произошёл ли проигрышб перезапускаем доску
-                                board.render(screen)
+                                snake_lose()
                                 break
                             elif wrongcells == 0:
                                 break
@@ -672,7 +705,7 @@ if __name__ == '__main__':
                                     elif board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty":
                                         lost = True
                                 if lost:  # Смотрим, произошёл ли проигрышб перезапускаем доску
-                                    board.render(screen)
+                                    snake_lose()
                                     break
                                 if wrongcells == 0:
                                     break
@@ -887,25 +920,8 @@ if __name__ == '__main__':
                         except Exception as e:
                             print(e)
                         board.rerender(screen)
-                    else:
-                        board.render(screen)
-                        cell = choice(board.first_column)
-                        failed = True
-                        while True:
-                            rotate = choice([True, False])
-
-                            wrongcells = 0
-                            screen.fill("black")
-                            board.rerender(screen)
-                            tetramino = drawTetra(pixelx=(cell[2] - blocksize * 2), pixely=cell[3],
-                                                  rotated=rotate)
-                            tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
-                            # отрисовка нового тетамино в случайном месте в верхних колоннах сетки
-                            for block in tblcoks:  # проверяем, не вылезают ли блоки за сетку
-                                if board.get_cell([block[0], block[1]]) == "None":
-                                    wrongcells += 1
-                            if wrongcells == 0:
-                                break
+                    elif board.snake[0][1] != "none":
+                        snake_lose()
             if cooldown_v == fps // 2 or cooldown_v > fps // 2:
                 cooldown = False
                 cooldown_v = 0
