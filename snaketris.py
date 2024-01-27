@@ -51,10 +51,10 @@ class Board:  # класс клеточной сетки, применялся �
 
     def render(self, screen):
         screen.fill("black")
-        nextSurf = self.font.render(self.scoretext, True, self.fontcolor)
-        nextRect = nextSurf.get_rect()
-        nextRect.topleft = (w - 150, 180)
-        self.display_score.blit(nextSurf, nextRect)
+        textSurf = self.font.render(self.scoretext, True, self.fontcolor)
+        textRect = textSurf.get_rect()
+        textRect.topleft = (w - 150, 180)
+        self.display_score.blit(textSurf, textRect)
         self.cells = []
         self.tetraminos = []
         self.score = 0
@@ -91,6 +91,8 @@ class Board:  # класс клеточной сетки, применялся �
         try:
             fon = pg.transform.scale(load_image('background.png'), (w, h))
             screen.blit(fon, (0, 0))
+            pic = pg.transform.scale(load_image(animationframe), (200, 300))
+            screen.blit(pic, (400, 300))
             pg.draw.rect(screen, "darkblue", (self.top, self.left * board.width // 10,
                                           self.cell_size * self.width, self.cell_size * self.height), 1)
             nextSurf = self.font.render(self.scoretext, True, self.fontcolor)
@@ -416,6 +418,8 @@ if __name__ == '__main__':
     tetradrawn = False
     board = Board(sqare_w, square_h)
     board.render(screen)
+    animationframe = "frame1.png"
+    anim_v = 0
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:  # выход из игры
@@ -583,6 +587,7 @@ if __name__ == '__main__':
             if cooldown:
                 cooldown_v += 1
             snake_v += tick
+            anim_v += tick
             if v >= v_time and not moved_down and not tetradrawn:
                 v = 0
                 moved_down = True
@@ -903,6 +908,13 @@ if __name__ == '__main__':
                                 break
             if cooldown_v == fps // 2 or cooldown_v > fps // 2:
                 cooldown = False
+                cooldown_v = 0
+            if anim_v >= fps // 2:
+                anim_v = 0
+                if animationframe == "frame1.png":
+                    animationframe = "frame2.png"
+                else:
+                    animationframe = "frame1.png"
             board.rerender(screen)
     pg.quit()
     sys.exit()
