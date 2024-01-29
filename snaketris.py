@@ -216,7 +216,7 @@ class Board:  # класс клеточной сетки, применялся �
             usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
         while True:
             blockcell = choice(self.cells)
-            if blockcell[-1] == "empty" and [blockcell[0], blockcell[1]] not in usedblocks and blockcell[:-1] + ["darkgreen"] not in self.snake and blockcell[:-1] + ["darkgreen"] not in self.snake[0]:
+            if blockcell[-1] == "empty" and [blockcell[0], blockcell[1]] not in usedblocks and blockcell[:-1] + ["darkgreen"] not in self.snake and blockcell[:-1] + ["darkgreen"] not in self.snake[0] and blockcell not in board.first_column:
                 self.cells[self.cells.index(blockcell)][-1] = "purple"
                 break
         self.rerender(screen)
@@ -374,7 +374,6 @@ def snake_lose():
             elif event.type == pg.KEYUP:
                 if event.key == K_RETURN:
                     if len(usedletters) > 0:
-                        print(usedletters)
                         cur.execute(f"""INSERT INTO {mode}(username, score) VALUES('{"".join(usedletters)}',{board.score})""").fetchall()
                         con.commit()
                         gamveoverscreen = False
@@ -710,6 +709,26 @@ if __name__ == '__main__':
                                                 tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
                                     except NameError:
                                         pass
+                                else:
+                                    try:
+                                        board.rerender(screen)
+                                        tetramino = drawTetra(index=tetra, rotated=False, color=tetracolor,
+                                                              pixelx=(cell[2] - blocksize * 2),
+                                                              pixely=cell[3])  # Поворот тетрамино в одну сторону
+                                        rotate = False
+                                        tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
+                                        for block in tblcoks:  # Если при повороте тетрамино уходит за пределы сетки, возвращаем старую
+                                            if (board.get_cell([block[0], block[1]]) == "None"
+                                                    or board.cells[int(board.get_cell([block[0], block[1]])[2])][
+                                                        -1] != "empty"):
+                                                board.rerender(screen)
+                                                tetramino = drawTetra(index=tetra, color=tetracolor,
+                                                                      pixelx=(cell[2] - blocksize * 2),
+                                                                      pixely=cell[3], rotated=True)
+                                                rotated = True
+                                                tetra, tetracolor, tblcoks = tetramino[0], tetramino[1], tetramino[2]
+                                    except NameError:
+                                        pass
                                 board.spawnspinblock()
                             elif board.cells[int(board.get_cell([block[0], block[1]])[2])][-1] != "empty":
                                 board.rerender(screen)
@@ -820,7 +839,8 @@ if __name__ == '__main__':
                                         snake_lose()
                                 else:
                                     snake_lose()
-
+                            else:
+                                snake_lose()
                         except Exception as e:
                             print(e)
                         board.rerender(screen)
@@ -853,6 +873,8 @@ if __name__ == '__main__':
                                     snake_lose()
                             else:
                                 snake_lose()
+                        else:
+                            snake_lose()
                         board.rerender(screen)
                     elif board.snake[0][1] == "down" and board.snake[0][0][0] != board.height - 1:
                         tempcell1 = board.snake[0][0]
@@ -908,6 +930,8 @@ if __name__ == '__main__':
                                     snake_lose()
                             else:
                                 snake_lose()
+                        else:
+                            snake_lose()
                         board.rerender(screen)
                     elif board.snake[0][1] == "right" and board.snake[0][0][1] != board.width - 1:
                         try:
@@ -960,6 +984,8 @@ if __name__ == '__main__':
                                         snake_lose()
                                 else:
                                     snake_lose()
+                            else:
+                                snake_lose()
                         except Exception as e:
                             print(e)
                         board.rerender(screen)
