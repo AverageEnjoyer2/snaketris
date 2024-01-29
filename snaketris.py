@@ -1,10 +1,11 @@
-# Это не финальная версия проекта, не оценивайте пожалуйста. Спасибо
+# Это близкая к финальной, не финальная версия проекта, не оценивайте пожалуйста. Спасибо
 import pygame as pg
 import random
 import sys
 from pygame.locals import *
 from random import choice
 import os
+import sqlite3
 
 fps = 25
 w, h = 600, 500
@@ -95,10 +96,10 @@ class Board:  # класс клеточной сетки, применялся �
             screen.blit(pic, (400, 300))
             pg.draw.rect(screen, "darkblue", (self.top, self.left * board.width // 10,
                                           self.cell_size * self.width, self.cell_size * self.height), 1)
-            nextSurf = self.font.render(self.scoretext, True, self.fontcolor)
-            nextRect = nextSurf.get_rect()
-            nextRect.topleft = (w - 150, 180)
-            self.display_score.blit(nextSurf, nextRect)
+            textSurf = self.font.render(self.scoretext, True, self.fontcolor)
+            textRect = textSurf.get_rect()
+            textRect.topleft = (w - 150, 180)
+            self.display_score.blit(textSurf, textRect)
             usedblocks = []
             for block in tblcoks:
                 usedblocks.append([board.get_cell(block)[0], board.get_cell(block)[1]])
@@ -348,12 +349,23 @@ def drawTetra(index=-1, pixelx=w - 150, pixely=230, rotated=False, color="nocolo
 
 def snake_lose():
     global board, screen, cell, failed, rotate, lost, wrongcells, tetramino, blocksize, tetra, tetracolor, tblcoks, \
-        running
+        running, mode
     fon = pg.transform.scale(load_image('gameoverbackground.png'), (w, h))
     screen.blit(fon, (0, 0))
-    letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U",
-               "V", "W", "X", "Y", "Z"]
+    usedletters = []
     gamveoverscreen = True
+    textSurf = board.font.render(board.scoretext, True, board.fontcolor)
+    textRect = textSurf.get_rect()
+    textRect.topleft = (300, 200)
+    board.display_score.blit(textSurf, textRect)
+    con = sqlite3.connect("score.db")
+    cur = con.cursor()
+    result = cur.execute(f"""SELECT username, score FROM {mode}""").fetchall()
+    result.sort(key=lambda x: int(x[1]), reverse=True)
+    bestSurf = board.font.render(f"{result[0][0]} - {result[0][1]}", True, board.fontcolor)
+    bestRect = bestSurf.get_rect()
+    bestRect.topleft = (20, 350)
+    board.display_score.blit(bestSurf, bestRect)
     while gamveoverscreen:
         for event in pg.event.get():
             if event.type == pg.QUIT:  # выход из игры
@@ -361,7 +373,34 @@ def snake_lose():
                 running = False
             elif event.type == pg.KEYUP:
                 if event.key == K_RETURN:
+                    if len(usedletters) > 0:
+                        print(usedletters)
+                        cur.execute(f"""INSERT INTO {mode}(username, score) VALUES('{"".join(usedletters)}',{board.score})""").fetchall()
+                        con.commit()
+                        gamveoverscreen = False
+            elif event.type == pg.KEYDOWN:
+                if event.key == K_BACKSPACE:
+                    if len(usedletters) > 0:
+                        del usedletters[-1]
+                elif event.key == K_ESCAPE:
                     gamveoverscreen = False
+                elif event.key != K_RETURN:
+                    if len(usedletters) <= 15:
+                        usedletters.append(event.unicode)
+            fon = pg.transform.scale(load_image('gameoverbackground.png'), (w, h))
+            screen.blit(fon, (0, 0))
+            textSurf = board.font.render(board.scoretext, True, board.fontcolor)
+            textRect = textSurf.get_rect()
+            textRect.topleft = (300, 200)
+            board.display_score.blit(textSurf, textRect)
+            textSurf1 = board.font.render("".join(usedletters), True, board.fontcolor)
+            textRect1 = textSurf1.get_rect()
+            textRect1.topleft = (50, 250)
+            board.display_score.blit(textSurf1, textRect1)
+            bestSurf = board.font.render(f"{result[0][0]} - {result[0][1]}", True, board.fontcolor)
+            bestRect = bestSurf.get_rect()
+            bestRect.topleft = (20, 350)
+            board.display_score.blit(bestSurf, bestRect)
         pg.display.update()
     board.render(screen)
     cell = choice(board.first_column)
@@ -414,12 +453,15 @@ if __name__ == '__main__':
             elif event.type == pg.KEYUP:
                 if event.key == K_e and not instruction:
                     v_time = fps * 2
+                    mode = "easy"
                     startingscreen = False
                 elif event.key == K_n and not instruction:
                     v_time = fps
+                    mode = "normal"
                     startingscreen = False
                 elif event.key == K_h and not instruction:
                     v_time = fps // 2
+                    mode = "hard"
                     startingscreen = False
                 elif event.key == K_q:
                     if not instruction:
@@ -453,6 +495,7 @@ if __name__ == '__main__':
                 wrongcells += 1
         if wrongcells == 0:
             break
+    board.spawnspinblock()
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:  # выход из игры
