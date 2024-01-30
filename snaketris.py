@@ -1,6 +1,5 @@
 # Это близкая к финальной, не финальная версия проекта, не оценивайте пожалуйста. Спасибо
 import pygame as pg
-import random
 import sys
 from pygame.locals import *
 from random import choice
@@ -43,6 +42,7 @@ class Board:  # класс клеточной сетки, применялся �
         self.font = pg.font.SysFont('comic', 50)
         self.display_score = pg.display.set_mode((w, h))
         self.fontcolor = "red"
+        self.scorefont = pg.font.SysFont('comic', 30)
         self.snake = []
 
     def set_view(self, left, top, cell_size):
@@ -52,9 +52,9 @@ class Board:  # класс клеточной сетки, применялся �
 
     def render(self, screen):
         screen.fill("black")
-        textSurf = self.font.render(self.scoretext, True, self.fontcolor)
+        textSurf = self.scorefont.render(self.scoretext, True, self.fontcolor)
         textRect = textSurf.get_rect()
-        textRect.topleft = (w - 150, 180)
+        textRect.topleft = (w - 185, 180)
         self.display_score.blit(textSurf, textRect)
         self.cells = []
         self.tetraminos = []
@@ -96,9 +96,9 @@ class Board:  # класс клеточной сетки, применялся �
             screen.blit(pic, (400, 300))
             pg.draw.rect(screen, "darkblue", (self.top, self.left * board.width // 10,
                                           self.cell_size * self.width, self.cell_size * self.height), 1)
-            textSurf = self.font.render(self.scoretext, True, self.fontcolor)
+            textSurf = self.scorefont.render(self.scoretext, True, self.fontcolor)
             textRect = textSurf.get_rect()
-            textRect.topleft = (w - 150, 180)
+            textRect.topleft = (w - 185, 180)
             self.display_score.blit(textSurf, textRect)
             usedblocks = []
             for block in tblcoks:
@@ -215,7 +215,7 @@ class Board:  # класс клеточной сетки, применялся �
             if cleared == 1:
                 self.scoretext = f"Очки:{self.score}"
             else:  # Если есть комбо, упоминаем его в очках
-                self.scoretext = f"Очки:{self.score}(Комбо:{cleared})!"
+                self.scoretext = f"Очки:{self.score}Комбо:{cleared}!"
         for i in range(cleared):
             if self.snake[-1][0] == self.snake[-2][0] - 1 and self.snake[-1][0] != 0:
                 if board.cells[board.cells.index(self.snake[-1]) - board.width][-1] == "empty":
@@ -353,11 +353,11 @@ def drawBlock(color, pixelx=None, pixely=None):  # отрисовка блока
 
 def drawTetra(index=-1, pixelx=w - 150, pixely=230, rotated=False, color="nocolor"):  # отрисовка тетрамино
     if index < 0:
-        tetramino = random.choice(tetraminos)  # Случайное тетрамино
+        tetramino = choice(tetraminos)  # Случайное тетрамино
     else:
         tetramino = tetraminos[index]  # прописанное тетрамино
     if color == "nocolor":  # проверка, прописан ли цвет
-        color = random.choice(colors)  # случайный цвет
+        color = choice(colors)  # случайный цвет
     number = 0
     if rotated:  # проверка наклона
         number += 1
@@ -378,7 +378,7 @@ def snake_lose():
     screen.blit(fon, (0, 0))
     usedletters = []
     gamveoverscreen = True
-    textSurf = board.font.render(board.scoretext, True, board.fontcolor)
+    textSurf = board.scorefont.render(board.scoretext, True, board.fontcolor)
     textRect = textSurf.get_rect()
     textRect.topleft = (300, 200)
     board.display_score.blit(textSurf, textRect)
@@ -412,7 +412,7 @@ def snake_lose():
                         usedletters.append(event.unicode)
             fon = pg.transform.scale(load_image('gameoverbackground.png'), (w, h))
             screen.blit(fon, (0, 0))
-            textSurf = board.font.render(board.scoretext, True, board.fontcolor)
+            textSurf = board.scorefont.render(board.scoretext, True, board.fontcolor)
             textRect = textSurf.get_rect()
             textRect.topleft = (300, 200)
             board.display_score.blit(textSurf, textRect)
